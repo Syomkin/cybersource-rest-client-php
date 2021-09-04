@@ -8,8 +8,7 @@ use CyberSource\Authentication\Util\GlobalParameter as GlobalParameter;
 use CyberSource\Authentication\Core\AuthException as AuthException;
 use Firebase\JWT\JWT as JWT;
 use CyberSource\Logging\LogFactory as LogFactory;
-
-require_once 'vendor/autoload.php';
+use Illuminate\Support\Facades\Cache;
 
 class JsonWebTokenHeader {
     private static $logger = null;

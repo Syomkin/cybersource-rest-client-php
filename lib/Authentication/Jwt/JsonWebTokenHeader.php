@@ -11,8 +11,7 @@ use CyberSource\Logging\LogFactory as LogFactory;
 
 require_once 'vendor/autoload.php';
 
-class JsonWebTokenHeader 
-{
+class JsonWebTokenHeader {
     private static $logger = null;
     
     /**
@@ -30,72 +29,66 @@ class JsonWebTokenHeader
     {
         $merchantID = $merchantConfig->getMerchantID();
         $keyPass = $merchantConfig->getKeyPassword();
-        $keyalias = $merchantConfig->getKeyAlias();
+        $keyAlias = $merchantConfig->getKeyAlias();
         $keyDir = $merchantConfig->getKeysDirectory();
         $keyFileName = $merchantConfig->getKeyFileName();
-        if(empty($keyalias)){
-            $keyalias = $merchantID;
-        } 
-        else if(($keyalias != $merchantID))
-        {
-            $keyalias = $merchantID;
+        if (empty($keyAlias)) {
+            $keyAlias = $merchantID;
+        } else if(($keyAlias !== $merchantID)) {
+            $keyAlias = $merchantID;
             $warning_msg = GlobalParameter::KEY_ALIAS_INCORRECT;
         }
-        if(empty($keyFileName)){
+
+        if (empty($keyFileName)) {
             $keyFileName = $merchantID;
-        } 
-        
-        if(empty($keyDir)){
+        }
+        if (empty($keyDir)) {
             $keyDir = GlobalParameter::KEY_DIR_PATH_DEFAULT;
         }
-        if(empty($keyPass)){
+        if (empty($keyPass)) {
             $keyPass = $merchantID;
         }
-        if(!empty($warning_msg)){
+        if (!empty($warning_msg)) {
             trigger_error($warning_msg, E_USER_WARNING);
             self::$logger->warning($warning_msg);
         }
 
-        $filePath = $keyDir.$keyFileName.".p12";
+        $filePath = $keyDir . $keyFileName . ".p12";
         //get certificate from p12
-        if (file_exists($filePath)) 
-        {
+        if (file_exists($filePath)) {
             $cert_store = file_get_contents($filePath);
-            $cacheKey = $keyFileName."_".strtotime(date("F d Y H:i:s", filemtime($filePath)));
-        }
-        else
-        { 
+            $cacheKey = $keyFileName . "_" . strtotime(date("F d Y H:i:s", filemtime($filePath)));
+        } else {
             $exception = new AuthException(GlobalParameter::KEY_FILE_INCORRECT, 0);
             self::$logger->error("AuthException : " . GlobalParameter::KEY_FILE_INCORRECT);
             self::$logger->close();
             throw $exception;
         }
 
-        if(!empty($cacheKey))
-            $cache_cert_store = apcu_fetch($cacheKey);
-        if($cache_cert_store ==false ){
-            $cache_cert_store="";
-            $result = apcu_store("$cacheKey", $cert_store);
-            $cache_cert_store = apcu_fetch($cacheKey);
+        if (!empty($cacheKey)) {
+            $cache_cert_store = Cache::get($cacheKey);
         }
+        if ($cache_cert_store === false ) {
+            $cache_cert_store = '';
+            $result = Cache::put($cacheKey, $cert_store);
+            $cache_cert_store = Cache::get($cacheKey);
+        }
+
         //read the certificate from cert obj    
-        if (openssl_pkcs12_read($cache_cert_store, $cert_info, $keyPass)) 
-        {
+        if (openssl_pkcs12_read($cache_cert_store, $cert_info, $keyPass)) {
             //Creating public key using certificate Not working in decryption
-            $certdata= openssl_x509_parse($cert_info['cert'],1);
+            $certData = openssl_x509_parse($cert_info['cert'],1);
             $privateKey = $cert_info['pkey']; 
             $publicKey = $this->PemToDer($cert_info['cert']); 
             $x5cArray = array($publicKey);
             $headers = array(
-                "v-c-merchant-id" => $keyalias,
+                "v-c-merchant-id" => $keyAlias,
                 "x5c" => $x5cArray
             );
             
             self::$logger->close();
             return JWT::encode($jwtBody, $privateKey, GlobalParameter::RS256, "", $headers);
-        }
-        else
-        {
+        } else {
             $exception = new AuthException(GlobalParameter::INCORRECT_KEY_PASSWORD, 0);
             self::$logger->error("AuthException : " . GlobalParameter::INCORRECT_KEY_PASSWORD);
             self::$logger->close();
@@ -103,11 +96,11 @@ class JsonWebTokenHeader
         }
     }
 
-    public function PemToDer($Pem){
+    public function PemToDer($Pem)
+    {
         $lines = explode("\n", trim($Pem));
         unset($lines[count($lines)-1]);
         unset($lines[0]);
         return implode("\n", $lines);
     }    
 }
-?>

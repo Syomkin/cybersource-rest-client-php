@@ -57,6 +57,13 @@ class MerchantConfiguration
      */
     protected $logFilename = '';
 
+	/**
+	 * debugLogFile for HTTP basic authentication
+	 *
+	 * @var string
+	 */
+    protected $debugLogFile = '';
+
     /**
      * apiKeyID for HTTP basic authentication
      *
@@ -382,6 +389,28 @@ class MerchantConfiguration
     {
         return $this->logFilename;
     }
+
+	/**
+	 * Sets the debugLogFile for HTTP basic authentication
+	 *
+	 * @param string $debugLogFile merchantID for HTTP basic authentication
+	 *
+	 * @return void
+	 */
+    public function setDebugFile($debugLogFile)
+	{
+		$this->debugLogFile = $debugLogFile;
+	}
+
+	/**
+	 * Gets the debugLogFile for HTTP basic authentication
+	 *
+	 * @return string debugLogFile for HTTP basic authentication
+	 */
+	public function getDebugFile()
+	{
+		return $this->debugLogFile;
+	}
 
     /**
      * Sets the keysDirectory for HTTP basic authentication

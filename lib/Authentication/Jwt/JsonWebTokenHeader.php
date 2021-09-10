@@ -64,14 +64,12 @@ class JsonWebTokenHeader {
             throw $exception;
         }
 
-        if (!empty($cacheKey)) {
-            $cache_cert_store = Cache::get($cacheKey);
-        }
-        if ($cache_cert_store === false ) {
-            $cache_cert_store = '';
-            $result = Cache::put($cacheKey, $cert_store);
-            $cache_cert_store = Cache::get($cacheKey);
-        }
+		$cache_cert_store = Cache::rememberForever(
+			$cacheKey,
+			function () use($cert_store) {
+				return $cert_store;
+			}
+		);
 
         //read the certificate from cert obj    
         if (openssl_pkcs12_read($cache_cert_store, $cert_info, $keyPass)) {
